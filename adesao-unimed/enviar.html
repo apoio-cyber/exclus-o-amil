@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Enviar Documentação Adesão</title>
+<style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: coluna única de formulário com trilho de etapas no topo; cartões só para cada pessoa/pergunta */
+:root{
+  --bg:#f3f6f5; --surface:#ffffff; --sunk:#e8eeec; --fg:#15201d; --muted:#5b6b66; --line:#d3ddd9;
+  --accent:#0b6e5a; --accent-fg:#ffffff; --accent-soft:#dcefe9; --warn:#9a5b00; --warn-soft:#fbefd9; --err:#b3261e; --err-soft:#fbe4e2;
+  --f-display:"Bricolage Grotesque",system-ui,sans-serif; --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1614; --surface:#17211e; --sunk:#1f2b27; --fg:#e4ece9; --muted:#9aaba5; --line:#2e3d38;
+  --accent:#4cc3a5; --accent-fg:#06221b; --accent-soft:#16372f; --warn:#f0b35a; --warn-soft:#3a2b12; --err:#ff8a80; --err-soft:#3d1a18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1614; --surface:#17211e; --sunk:#1f2b27; --fg:#e4ece9; --muted:#9aaba5; --line:#2e3d38;
+  --accent:#4cc3a5; --accent-fg:#06221b; --accent-soft:#16372f; --warn:#f0b35a; --warn-soft:#3a2b12; --err:#ff8a80; --err-soft:#3d1a18; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:28px 80px}
+header.top h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.6rem,4vw,2.1rem);line-height:1.15;margin:0 0 6px;text-wrap:balance}
+header.top p{margin:0;color:var(--muted);max-width:60ch}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:6px}
+ol.steps{list-style:none;padding:0;margin:24px 0 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+ol.steps li{border-top:3px solid var(--line);padding-top:8px;font-size:.8rem;color:var(--muted);min-width:0}
+ol.steps li b{display:block;font-family:var(--f-mono);font-weight:500;font-size:.72rem}
+ol.steps li.on{border-color:var(--accent);color:var(--fg)}
+ol.steps li.done{border-color:var(--accent);opacity:.7}
+section.step h2{font-family:var(--f-display);font-weight:600;font-size:1.3rem;margin:4px 0 4px}
+section.step>p.lead{margin:0 0 18px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px 12px}
+.c6{grid-column:span 6}.c4{grid-column:span 4}.c3{grid-column:span 3}.c2{grid-column:span 2}
+@media (max-width:560px){.c4,.c3,.c2{grid-column:span 6}.c2.half,.c3.half{grid-column:span 3}}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f label,.f .lbl{font-size:.8rem;font-weight:600}
+.f .hint{font-size:.74rem;color:var(--muted)}
+input[type=text],input[type=tel],select,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;width:100%;min-width:0}
+input.mono{font-family:var(--f-mono);font-size:.9rem;letter-spacing:.02em}
+input.up{text-transform:uppercase}
+textarea{min-height:64px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.bad input,.bad select,.bad textarea,.bad .seg{border-color:var(--err)!important;background:var(--err-soft)}
+.err{font-size:.74rem;color:var(--err);min-height:0}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);flex-wrap:wrap}
+.seg button{font:inherit;font-size:.88rem;border:0;background:transparent;color:var(--fg);padding:8px 14px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.fixed{background:var(--sunk);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.fixed div{min-width:0}.fixed span{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.fixed strong{font-size:.86rem;font-weight:600;overflow-wrap:anywhere}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.card-h h3{margin:0;font-size:1rem;font-weight:600}
+.tag{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;background:var(--accent-soft);color:var(--accent);padding:3px 8px;border-radius:99px;font-weight:600}
+.btn{font:inherit;font-weight:600;border-radius:8px;padding:10px 18px;cursor:pointer;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-fg)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.link{border:0;background:none;color:var(--err);padding:4px 6px;font-size:.84rem}
+.btn:disabled{opacity:.5;cursor:wait}
+.row-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:26px;padding-top:18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.note{border-radius:10px;padding:12px 14px;font-size:.88rem;background:var(--warn-soft);color:var(--fg);border-left:4px solid var(--warn);margin:14px 0}
+.note b{color:var(--warn)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{font:inherit;font-size:.85rem;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:99px;padding:6px 14px;cursor:pointer}
+.tabs button[aria-selected=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.tabs button.pend::after{content:" •";color:var(--err)}
+.q{border-top:1px solid var(--line);padding:12px 0;display:grid;grid-template-columns:2.2rem 1fr;gap:4px 10px}
+.q .n{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);padding-top:2px}
+.q .t{font-size:.9rem;min-width:0}
+.q .a{grid-column:2;display:flex;flex-direction:column;gap:10px}
+.q .na{font-size:.78rem;color:var(--muted)}
+.item{background:var(--sunk);border-radius:10px;padding:12px;display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.item .f label{font-size:.75rem}
+.preview{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);background:var(--sunk);border-radius:8px;padding:8px 10px;overflow-wrap:anywhere}
+table.sum{width:100%;border-collapse:collapse;font-size:.86rem}
+table.sum td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+table.sum td:first-child{color:var(--muted);width:40%}
+.sign{padding-left:1.1rem;margin:6px 0 0}.sign li{margin-bottom:4px}
+.ok{color:var(--accent);font-weight:600}.bad-t{color:var(--err)}
+.dl-h{font-size:1rem;margin:20px 0 2px}
+.ck-g{padding:8px 0;border-bottom:1px solid var(--line)}.ck-g:last-of-type{border-bottom:0}
+.ck-t{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);font-weight:600;margin-bottom:4px}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:5px 0;font-size:.9rem;cursor:pointer}
+.ck input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
+.ck input:checked+span{color:var(--muted);text-decoration:line-through}
+.ck-count{font-size:.84rem;color:var(--muted);padding-top:10px;border-top:1px solid var(--line)}
+.dl{padding:4px 16px}
+.dl-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.dl-row:last-child{border-bottom:0}
+.dl-n{font-family:var(--f-mono);font-weight:500;width:1.8rem;height:1.8rem;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none;font-size:.85rem}
+.dl-t{flex:1;min-width:0}.dl-t strong{display:block;font-size:.92rem}.dl-t span{font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}
+.dl-row .btn{padding:8px 14px;font-size:.88rem}
+.status{font-size:.88rem;margin-top:10px}
+@media (prefers-reduced-motion:no-preference){section.step{animation:in .25s ease-out}@keyframes in{from{transform:translateY(6px)}to{transform:none}}}
+</style>
+<style>
+.ck-t{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);font-weight:600;margin-bottom:4px}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:5px 0;font-size:.9rem;cursor:pointer}
+.ck input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
+.consent{margin-top:18px;background:var(--sunk);border-radius:10px;padding:12px 14px}
+.bad-t{color:var(--err)}
+.slot{padding:10px 0;border-top:1px solid var(--line)}
+.ck-t+.slot{border-top:0}
+.sl-top{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.sl-info{min-width:0;display:flex;flex-direction:column}
+.sl-n{font-size:.92rem;font-weight:500}
+.slot.has .sl-n::before{content:"✓ ";color:var(--accent);font-weight:700}
+.sl-add{padding:7px 14px;font-size:.86rem;flex:none;text-align:center}
+.sl-files{list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:4px}
+.sl-files li{display:flex;gap:8px;align-items:center;background:var(--sunk);border-radius:8px;padding:6px 10px;font-size:.82rem}
+.sl-files li span{flex:1;min-width:0;overflow-wrap:anywhere}.sl-files small{color:var(--muted);font-family:var(--f-mono)}
+.slot.bad{background:var(--err-soft);border-radius:8px;padding-inline:8px}
+.progress{margin-top:14px}.bar{height:8px;background:var(--sunk);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.big-ok{width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-size:1.8rem;margin:0 auto 12px}
+a.btn{text-decoration:none;display:inline-block}
+.slot .hint{font-size:.76rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Unimed Flex Enfermaria · Cucinare Pro Alimentação</div>
+    <h1>Enviar documentação de adesão</h1>
+    <p>Anexe os formulários já assinados e digitalizados e os documentos pessoais. Tudo segue direto para a equipe responsável pela inclusão no plano.</p>
+  </header>
+
+  <div class="note" id="notCfg" hidden><b>Envio ainda não configurado.</b> Esta página ainda não está ligada ao destino dos arquivos. Fale com o RH.</div>
+
+  <section class="step" id="formArea">
+    <h2>1. Quem está enviando</h2>
+    <div class="grid" style="margin-top:12px">
+      <div class="f c6" data-f="nome"><label for="e_nome">Nome completo do titular</label><input id="e_nome" type="text" class="up" autocomplete="name"><div class="err"></div></div>
+      <div class="f c3" data-f="cpf"><label for="e_cpf">CPF do titular</label><input id="e_cpf" type="text" class="mono" inputmode="numeric" placeholder="000.000.000-00" data-mask="cpf"><div class="err"></div></div>
+      <div class="f c3" data-f="tel"><label for="e_tel">Telefone</label><input id="e_tel" type="tel" class="mono" inputmode="numeric" placeholder="(12) 99999-9999" data-mask="tel"><div class="err"></div></div>
+      <div class="f c3" data-f="conj"><span class="lbl">Incluiu cônjuge ou companheiro(a)?</span><div class="seg" id="e_conj"><button type="button" data-v="N" aria-pressed="true">Não</button><button type="button" data-v="S">Sim</button></div></div>
+      <div class="f c3" data-f="filhos"><label for="e_filhos">Quantos filhos incluiu?</label><select id="e_filhos"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+    </div>
+    <div class="grid" id="depNames" style="margin-top:14px"></div>
+
+    <h2 style="margin-top:28px">2. Anexe os arquivos</h2>
+    <p class="lead">Aceita foto (JPG, PNG) ou PDF. Pode anexar mais de um arquivo por item, por exemplo frente e verso do RG. Fotos são reduzidas automaticamente para o envio ficar leve.</p>
+    <div id="slots"></div>
+
+    <label class="ck consent" for="e_ok"><input type="checkbox" id="e_ok"><span>Autorizo o envio destes documentos, incluindo as informações de saúde, exclusivamente para a inclusão no plano de saúde Unimed Vale Novo Paulista.</span></label>
+    <div class="err" id="okErr"></div>
+
+    <div class="nav"><a class="btn ghost" href="./">Voltar ao preenchimento</a><button class="btn" type="button" id="send">Enviar documentação</button></div>
+    <div class="progress" id="prog" hidden><div class="bar"><i id="barI"></i></div><div class="status" id="status" aria-live="polite"></div></div>
+  </section>
+
+  <section class="step done-box" id="doneArea" hidden>
+    <div class="card" style="text-align:center;padding:32px 20px">
+      <div class="big-ok">✓</div>
+      <h2>Documentação enviada</h2>
+      <p class="lead" id="doneMsg" style="margin:6px auto 0;max-width:46ch"></p>
+    </div>
+  </section>
+</div>
+
+<script>
+const ENDPOINT = '__ENDPOINT__';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const norm=s=>(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+const digits=s=>(s||'').replace(/\D/g,'');
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const MASKS={cpf:v=>{v=digits(v).slice(0,11);let o=v.slice(0,3);if(v.length>3)o+='.'+v.slice(3,6);if(v.length>6)o+='.'+v.slice(6,9);if(v.length>9)o+='-'+v.slice(9);return o},
+  tel:v=>{v=digits(v).slice(0,11);if(!v)return'';if(v.length<=2)return`(${v}`;const r=v.slice(2);const c=v.length===11?5:4;return`(${v.slice(0,2)}) ${r.length>c?r.slice(0,c)+'-'+r.slice(c):r}`}};
+document.addEventListener('input',e=>{const m=e.target.dataset&&e.target.dataset.mask;if(m)e.target.value=MASKS[m](e.target.value)},true);
+function validCPF(s){const c=digits(s);if(c.length!==11||/^(\d)\1+$/.test(c))return false;let t=0;for(let i=0;i<9;i++)t+=+c[i]*(10-i);let d=(t*10)%11%10;if(d!=c[9])return false;t=0;for(let i=0;i<10;i++)t+=+c[i]*(11-i);d=(t*10)%11%10;return d==c[10]}
+function mark(box,msg){if(!box)return;box.classList.toggle('bad',!!msg);const e=$('.err',box);if(e)e.textContent=msg||''}
+if(!ENDPOINT||ENDPOINT.startsWith('__')){$('#notCfg').hidden=false}
+
+document.addEventListener('click',e=>{const b=e.target.closest('.seg button');if(!b)return;const seg=b.parentElement;
+  $$('button',seg).forEach(x=>x.setAttribute('aria-pressed',x===b));seg.dataset.val=b.dataset.v;build()});
+$('#e_conj').dataset.val='N';
+$('#e_filhos').onchange=build;
+
+const FILES={};   // slotId -> [File]
+const depNamesVal={};
+function slotsDef(){
+  const conj=$('#e_conj').dataset.val==='S',nf=+$('#e_filhos').value;
+  const dn=k=>norm(depNamesVal[k]||'').split(' ')[0]||'';
+  const pessoas=['TITULAR'];if(conj)pessoas.push('CONJUGE');for(let i=1;i<=nf;i++)pessoas.push('FILHO'+i);
+  const G=[{t:'Formulários assinados',items:[{id:'F1',n:'Ficha Cadastral',file:'01_FICHA_CADASTRAL'},{id:'F2',n:'Carta de Orientação (rubricada e assinada)',file:'02_CARTA_ORIENTACAO'},
+     ...pessoas.map((p,k)=>({id:'F3_'+p,n:`Declaração de Saúde · ${p==='TITULAR'?'titular':p==='CONJUGE'?'cônjuge '+dn('c'):'filho(a) '+dn('f'+p.slice(5))}`,file:`${String(3+k).padStart(2,'0')}_DECLARACAO_SAUDE_${p}`}))]},
+    {t:'Titular',items:[{id:'T_RG',n:'RG',file:'TITULAR_RG'},{id:'T_CPF',n:'CPF',file:'TITULAR_CPF',opt:'Se o CPF já aparece no RG, pode deixar em branco.'},
+      {id:'T_CTPS',n:'CTPS digital (dados pessoais e registro na Cucinare)',file:'TITULAR_CTPS'},{id:'T_END',n:'Comprovante de endereço',file:'TITULAR_COMPROVANTE_ENDERECO'},{id:'T_CNS',n:'Cartão Nacional de Saúde (CNS)',file:'TITULAR_CNS'}]}];
+  if(conj)G.push({t:'Cônjuge '+dn('c'),items:[{id:'C_CERT',n:'Certidão de casamento',file:'CONJUGE_CERTIDAO_CASAMENTO'},{id:'C_RG',n:'RG',file:'CONJUGE_RG'},
+    {id:'C_CPF',n:'CPF',file:'CONJUGE_CPF',opt:'Se o CPF já aparece no RG, pode deixar em branco.'},{id:'C_CNS',n:'Cartão Nacional de Saúde (CNS)',file:'CONJUGE_CNS'}]});
+  for(let i=1;i<=nf;i++)G.push({t:'Filho(a) '+i+' '+dn('f'+i),items:[{id:`F${i}_DOC`,n:'RG e CPF (se não tiver, certidão de nascimento)',file:`FILHO${i}_RG_CPF_CERTIDAO`},{id:`F${i}_CNS`,n:'Cartão Nacional de Saúde (CNS)',file:`FILHO${i}_CNS`}]});
+  return G;
+}
+function build(){
+  const conj=$('#e_conj').dataset.val==='S',nf=+$('#e_filhos').value;
+  const dnBox=$('#depNames');const want=[];if(conj)want.push(['c','Nome do cônjuge']);for(let i=1;i<=nf;i++)want.push(['f'+i,`Nome do filho(a) ${i}`]);
+  dnBox.innerHTML=want.map(([k,l])=>`<div class="f c3" data-dn="${k}"><label for="dn_${k}">${l}</label><input id="dn_${k}" type="text" class="up" value="${esc(depNamesVal[k])}"><div class="err"></div></div>`).join('');
+  $$('input',dnBox).forEach(i=>i.oninput=()=>{depNamesVal[i.closest('[data-dn]').dataset.dn]=i.value;renderSlots(true)});
+  renderSlots();
+}
+function renderSlots(labelsOnly){
+  const G=slotsDef();
+  if(labelsOnly){G.forEach(g=>g.items.forEach(it=>{const el=$(`[data-slot="${it.id}"] .sl-n`);if(el)el.textContent=it.n}));$$('.sl-g').forEach((el,k)=>{if(G[k])$('.ck-t',el).textContent=G[k].t});return}
+  $('#slots').innerHTML=G.map(g=>`<div class="card sl-g"><div class="ck-t">${esc(g.t)}</div>${g.items.map(it=>`
+    <div class="slot" data-slot="${it.id}" data-file="${it.file}" ${it.opt?'data-opt="1"':''}>
+      <div class="sl-top"><div class="sl-info"><span class="sl-n">${esc(it.n)}</span>${it.opt?`<span class="hint">${it.opt}</span>`:''}</div>
+      <label class="btn ghost sl-add" for="in_${it.id}">Anexar</label><input id="in_${it.id}" type="file" accept="image/*,application/pdf" multiple hidden></div>
+      <ul class="sl-files"></ul><div class="err"></div></div>`).join('')}</div>`).join('');
+  $$('.slot').forEach(sl=>{const id=sl.dataset.slot;FILES[id]=FILES[id]||[];drawFiles(sl);
+    $('input[type=file]',sl).onchange=e=>{for(const f of e.target.files){if(!/^image\/|application\/pdf/.test(f.type)){mark(sl,'Use foto (JPG/PNG) ou PDF.');continue}if(f.size>15e6){mark(sl,`O arquivo ${f.name} passa de 15 MB.`);continue}FILES[id].push(f);mark(sl,'')}e.target.value='';drawFiles(sl)}});
+}
+function drawFiles(sl){const id=sl.dataset.slot;const ul=$('.sl-files',sl);
+  ul.innerHTML=FILES[id].map((f,k)=>`<li><span>${esc(f.name)}</span><small>${(f.size/1e6).toFixed(1)} MB</small><button type="button" class="btn link" data-k="${k}">Remover</button></li>`).join('');
+  sl.classList.toggle('has',FILES[id].length>0);
+  $$('button',ul).forEach(b=>b.onclick=()=>{FILES[id].splice(+b.dataset.k,1);drawFiles(sl)});}
+build();
+
+/* -------- envio -------- */
+async function shrink(file){
+  if(!file.type.startsWith('image/'))return file;
+  try{const bmp=await createImageBitmap(file);const max=1800;const r=Math.min(1,max/Math.max(bmp.width,bmp.height));
+    const c=document.createElement('canvas');c.width=Math.round(bmp.width*r);c.height=Math.round(bmp.height*r);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    const blob=await new Promise(res=>c.toBlob(res,'image/jpeg',0.82));return blob&&blob.size<file.size?new File([blob],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}):file}catch(e){return file}}
+function b64(buf){const u=new Uint8Array(buf);let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)}
+async function post(obj){const r=await fetch(ENDPOINT,{method:'POST',body:JSON.stringify(obj)});const j=await r.json();if(!j.ok)throw new Error(j.erro||'falha no envio');return j}
+
+$('#send').onclick=async()=>{
+  const errs=[];const nome=$('#e_nome').value,cpf=$('#e_cpf').value,tel=$('#e_tel').value;
+  const chk=(k,ok,msg)=>{const b=$(`[data-f="${k}"]`);mark(b,ok?'':msg);if(!ok)errs.push(b)};
+  chk('nome',norm(nome).split(' ').length>=2,'Informe o nome completo.');chk('cpf',validCPF(cpf),'CPF inválido.');chk('tel',digits(tel).length>=10,'Informe DDD e número.');
+  $$('[data-dn]').forEach(b=>{const ok=norm($('input',b).value).split(' ').length>=2;mark(b,ok?'':'Informe o nome completo.');if(!ok)errs.push(b)});
+  $$('.slot').forEach(sl=>{const ok=sl.dataset.opt||FILES[sl.dataset.slot].length;mark(sl,ok?'':'Anexe este documento.');if(!ok)errs.push(sl)});
+  const okc=$('#e_ok').checked;$('#okErr').textContent=okc?'':'Marque a autorização para enviar.';if(!okc)errs.push($('#e_ok'));
+  if(errs.length){errs[0].scrollIntoView({behavior:'smooth',block:'center'});return}
+  if(!ENDPOINT||ENDPOINT.startsWith('__')){$('#notCfg').hidden=false;$('#notCfg').scrollIntoView({behavior:'smooth'});return}
+
+  const btn=$('#send');btn.disabled=true;$('#prog').hidden=false;const st=$('#status'),bar=$('#barI');
+  const now=new Date(),p2=n=>String(n).padStart(2,'0');
+  const pasta=`${norm(nome)} - CPF ${digits(cpf)} - ${now.getFullYear()}-${p2(now.getMonth()+1)}-${p2(now.getDate())} ${p2(now.getHours())}h${p2(now.getMinutes())}`;
+  const list=[];$$('.slot').forEach(sl=>FILES[sl.dataset.slot].forEach((f,k,arr)=>list.push({f,base:sl.dataset.file+(arr.length>1?'_'+(k+1):'')})));
+  try{
+    for(let i=0;i<list.length;i++){const {f,base}=list[i];st.textContent=`Enviando arquivo ${i+1} de ${list.length}…`;bar.style.width=(i/list.length*100)+'%';
+      const g=await shrink(f);const ext=(g.name.match(/\.(\w+)$/)||[,g.type==='application/pdf'?'pdf':'jpg'])[1].toLowerCase();
+      await post({acao:'arquivo',pasta,nome:`${base}.${ext}`,tipo:g.type||'application/octet-stream',dados:b64(await g.arrayBuffer())});}
+    st.textContent='Finalizando…';bar.style.width='100%';
+    const conj=$('#e_conj').dataset.val==='S';
+    await post({acao:'concluir',pasta,titular:norm(nome),cpf,telefone:tel,vidas:1+(conj?1:0)+(+$('#e_filhos').value)});
+    $('#formArea').hidden=true;$('#doneArea').hidden=false;
+    $('#doneMsg').textContent=`Recebemos ${list.length} arquivo${list.length>1?'s':''} de ${norm(nome)}. A equipe vai conferir a documentação e entra em contato pelo telefone ${tel} se faltar algo.`;
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){st.innerHTML=`<span class="bad-t">O envio parou (${esc(e.message)}). Verifique a internet e clique em Enviar de novo.</span>`;btn.disabled=false}
+};
+</script>
+
+</body>
+</html>
