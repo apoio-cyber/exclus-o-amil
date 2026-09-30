@@ -101,18 +101,8 @@
     <div id="resultado"></div>
   </div>
 
-  <div class="card" id="stepDetalhes" hidden>
-    <div class="step-label"><span class="n">2</span> Data da demissão</div>
-    <div class="row">
-      <div>
-        <label for="dataDemissao">Data de demissão / exoneração</label><br>
-        <input type="date" id="dataDemissao">
-      </div>
-    </div>
-  </div>
-
   <div class="card" id="stepGerar" hidden>
-    <div class="step-label"><span class="n">3</span> Gerar formulário</div>
+    <div class="step-label"><span class="n">2</span> Gerar formulário</div>
     <button class="primary" id="btnGerar">Gerar e baixar PDF preenchido</button>
     <div class="status" id="gerarStatus"></div>
   </div>
@@ -138,7 +128,7 @@ const FIXED_DATE_FIELDS = { dia: "Campo de texto 43", mes: "Campo de texto 44", 
 const MESES_PT = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho",
   "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
-const MOTIVO_CANCELAMENTO_FIELD = "Caixa de seleção 13";
+const MOTIVO_CANCELAMENTO_FIELD = "Caixa de seleção 20"; // Desistência do plano
 
 // Caixa (pt PDF, origem inferior-esquerda) para a imagem de assinatura, página 3 (index 2)
 const SIGNATURE_BOX = { pageIndex: 2, x0: 45, y0: 183, x1: 165, y1: 230 };
@@ -149,6 +139,7 @@ const TIPO_CONFIG = {
   dental: {
     tipoCheckbox: "Caixa de seleção 26",
     outroTipoCheckbox: "Caixa de seleção 25",
+    numeroContratoField: "Campo de texto 91",
     numeroBeneficiarioFields: ["Campo de texto 79"],
     tempoFields: { anos: "Campo de texto 65", meses: "Campo de texto 66", dias: "Campo de texto 67" },
     contribuiu: { simId: "Check Box_3", naoId: "Check Box_4", isSim: true },
@@ -159,6 +150,7 @@ const TIPO_CONFIG = {
   saude: {
     tipoCheckbox: "Caixa de seleção 25",
     outroTipoCheckbox: "Caixa de seleção 26",
+    numeroContratoField: "Campo de texto 89",
     numeroBeneficiarioFields: ["Campo de texto 4", "Campo de texto 87"],
     tempoFields: { anos: "Campo de texto 98", meses: "Campo de texto 99", dias: "Campo de texto 100" },
     contribuiu: { simId: "Check Box_1", naoId: "Check Box_2", isSim: true },
@@ -236,16 +228,12 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   };
 
   setText("Campo de texto 86", data.razao_social);
-  setText("Campo de texto 89", data.numero_contrato);
+  setText(cfg.numeroContratoField, data.numero_contrato);
   setText("Campo de texto 88", data.nome_beneficiario);
   setText("Campo de texto 5", formatCPF(data.cpf));
   for (const fid of cfg.numeroBeneficiarioFields) setText(fid, padCarteirinha(data.numero_beneficiario));
 
-  if (data.data_demissao) {
-    setText("Campo de texto 81", data.data_demissao.dia);
-    setText("Campo de texto 83", data.data_demissao.mes);
-    setText("Campo de texto 85", data.data_demissao.ano);
-  }
+  // Data de demissão -> fica em branco (motivo agora é "Desistência do plano").
 
   if (data.data_inclusao) {
     const t = diffYMD(data.data_inclusao, new Date());
@@ -275,7 +263,7 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   setYesNo(cfg.informadoDireito);
   setYesNo(cfg.desejaManter);
 
-  // Motivo do cancelamento -> sempre "Pedido de demissão" (1º quadrante)
+  // Motivo do cancelamento -> sempre "Desistência do plano"
   setCheck(MOTIVO_CANCELAMENTO_FIELD, true);
 
   // Gera as aparências dos campos de texto com o tamanho de fonte original do
@@ -311,9 +299,7 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   const resultado = document.getElementById("resultado");
   const baseStatus = document.getElementById("baseStatus");
   const baseData = document.getElementById("baseData");
-  const stepDetalhes = document.getElementById("stepDetalhes");
   const stepGerar = document.getElementById("stepGerar");
-  const dataDemissao = document.getElementById("dataDemissao");
   const btnGerar = document.getElementById("btnGerar");
   const gerarStatus = document.getElementById("gerarStatus");
 
@@ -377,7 +363,7 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
     hideSteps();
   }
 
-  function hideSteps() { stepDetalhes.hidden = true; stepGerar.hidden = true; }
+  function hideSteps() { stepGerar.hidden = true; }
 
   function planoResumo(tipo) {
     const p = current.entry[tipo];
@@ -425,7 +411,6 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   }
 
   function showDetalhes() {
-    stepDetalhes.hidden = false;
     stepGerar.hidden = false;
   }
 
@@ -434,14 +419,9 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
       gerarStatus.textContent = "Selecione o tipo de plano acima.";
       return;
     }
-    if (!dataDemissao.value) {
-      gerarStatus.textContent = "Informe a data de demissão.";
-      return;
-    }
     btnGerar.disabled = true;
     gerarStatus.innerHTML = `<span class="spin"></span> Gerando PDF…`;
     try {
-      const [ano, mes, dia] = dataDemissao.value.split("-");
       const p = current.entry[current.tipo];
       const data = {
         tipo: current.tipo,
@@ -451,7 +431,6 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
         cpf: current.cpf,
         numero_beneficiario: p.carteirinha,
         data_inclusao: p.data_inclusao,
-        data_demissao: { dia: String(parseInt(dia, 10)), mes: String(parseInt(mes, 10)), ano: ano },
       };
       const pdfBytes = await fillAmilPdf({
         PDFDocument: PDFLib.PDFDocument,
