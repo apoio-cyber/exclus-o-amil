@@ -86,6 +86,12 @@ table.sum td:first-child{color:var(--muted);width:40%}
 .sign{padding-left:1.1rem;margin:6px 0 0}.sign li{margin-bottom:4px}
 .ok{color:var(--accent);font-weight:600}.bad-t{color:var(--err)}
 .dl-h{font-size:1rem;margin:20px 0 2px}
+.ck-g{padding:8px 0;border-bottom:1px solid var(--line)}.ck-g:last-of-type{border-bottom:0}
+.ck-t{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);font-weight:600;margin-bottom:4px}
+.ck{display:flex;gap:10px;align-items:flex-start;padding:5px 0;font-size:.9rem;cursor:pointer}
+.ck input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
+.ck input:checked+span{color:var(--muted);text-decoration:line-through}
+.ck-count{font-size:.84rem;color:var(--muted);padding-top:10px;border-top:1px solid var(--line)}
 .dl{padding:4px 16px}
 .dl-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 .dl-row:last-child{border-bottom:0}
@@ -111,6 +117,15 @@ table.sum td:first-child{color:var(--muted);width:40%}
   <section class="step" id="s1">
     <h2>Dados do titular</h2>
     <p class="lead">Nomes são convertidos para maiúsculas e sem acento automaticamente. Escreva sem abreviar.</p>
+    <div class="note"><b>Antes de começar, separe os documentos</b>
+      <p style="margin:6px 0 4px">Você vai precisar deles para preencher e depois enviar junto com os formulários assinados:</p>
+      <ul class="sign">
+        <li><b>Titular:</b> RG, CPF, CTPS digital (com dados pessoais e registro na Cucinare), comprovante de endereço e Cartão Nacional de Saúde (CNS).</li>
+        <li><b>Cônjuge:</b> certidão de casamento, RG, CPF e CNS.</li>
+        <li><b>Filhos:</b> RG e CPF (se não tiver, certidão de nascimento) e CNS.</li>
+      </ul>
+      <p style="margin:6px 0 0"><b>Prazo:</b> 30 dias a partir da data de admissão. Depois disso, há cumprimento de carências.</p>
+    </div>
     <div class="fixed">
       <div><span>Movimentação</span><strong>Inclusão</strong></div>
       <div><span>Empresa</span><strong>Cucinare Pro Alimentação Ltda</strong></div>
@@ -169,6 +184,9 @@ table.sum td:first-child{color:var(--muted);width:40%}
     <p class="lead" style="margin:0 0 10px;color:var(--muted)">Cada documento sai em um arquivo separado, numerado na ordem certa. Clique em cada um.</p>
     <div class="card dl" id="dlList"></div>
     <div class="status" id="status" aria-live="polite"></div>
+    <h3 class="dl-h">Checklist da documentação</h3>
+    <p class="lead" style="margin:0 0 10px;color:var(--muted)">Marque cada item conforme separar. A documentação completa evita atraso na inclusão.</p>
+    <div class="card" id="checklist"></div>
     <div class="note"><b>Como enviar a documentação</b>
       <ol class="sign">
         <li>Imprima os arquivos.</li>
@@ -413,7 +431,19 @@ function renderSummary(){
   $('#signList').innerHTML=`<li><b>Ficha Cadastral:</b> a assinatura é da empresa. Só rubrique.</li>
    <li><b>Carta de Orientação:</b> assine na segunda página, no lado do beneficiário.</li>
    <li><b>Declaração de Saúde</b> (${n>1?n+' declarações, uma por pessoa':'1 declaração'}): assine nas páginas 3, 4, 5, 6 (duas assinaturas) e 7. Para menor de idade, assina o responsável.</li>`;
-  renderDownloads();
+  renderDownloads();renderChecklist();
+}
+function renderChecklist(){
+  const first=s=>norm(s).split(' ')[0]||'';
+  const groups=[{t:'Formulários',items:['Ficha Cadastral (arquivo 1)','Carta de Orientação, rubricada e assinada (arquivo 2)',
+      ...people().map((p,k)=>`Declaração de Saúde de ${first(p.nome)}, rubricada e assinada (arquivo ${3+k})`)]},
+    {t:`Titular · ${first(S.t.nome)}`,items:['RG','CPF','CTPS digital (dados pessoais e registro na Cucinare)','Comprovante de endereço','Cartão Nacional de Saúde (CNS)']}];
+  S.deps.filter(d=>d.tipo==='conj').forEach(d=>groups.push({t:`Cônjuge · ${first(d.nome)}`,items:['Certidão de casamento','RG','CPF','Cartão Nacional de Saúde (CNS)']}));
+  S.deps.filter(d=>d.tipo==='filho').forEach(d=>groups.push({t:`Filho(a) · ${first(d.nome)}`,items:['RG e CPF (se não tiver, certidão de nascimento)','Cartão Nacional de Saúde (CNS)']}));
+  let n=0;$('#checklist').innerHTML=groups.map(g=>`<div class="ck-g"><div class="ck-t">${esc(g.t)}</div>${g.items.map(i=>{n++;return `<label class="ck" for="ck${n}"><input type="checkbox" id="ck${n}"><span>${esc(i)}</span></label>`}).join('')}</div>`).join('')
+    +'<div class="ck-count" id="ckCount"></div>';
+  const upd=()=>{const all=$$('#checklist input'),on=all.filter(x=>x.checked).length;$('#ckCount').innerHTML=on===all.length?'<span class="ok">Tudo separado. Pode enviar.</span>':`${on} de ${all.length} itens separados`};
+  $('#checklist').onchange=upd;upd();
 }
 function fileBase(s){return norm(s).replace(/ /g,'_')}
 function docsList(){
