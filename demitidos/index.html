@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Exclusão de Benefício Amil — Desistência</title>
+<title>Exclusão de Benefício Amil — Desligados</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -87,8 +87,8 @@
 <div class="wrap">
   <header class="page">
     <span class="eyebrow">Grupo Cucinare · FLV · Coletiva 7</span>
-    <h1>Exclusão de benefício Amil — Desistência do plano</h1>
-    <p class="sub">Use este formulário quando o beneficiário continua trabalhando na empresa e está pedindo apenas o cancelamento do plano. Digite o CPF para localizar o plano ativo automaticamente.</p>
+    <h1>Exclusão de benefício Amil — Desligados</h1>
+    <p class="sub">Use este formulário para beneficiários que estão sendo desligados da empresa (demissão ou pedido de demissão). Digite o CPF para localizar o plano ativo automaticamente.</p>
   </header>
 
   <div class="card">
@@ -101,8 +101,22 @@
     <div id="resultado"></div>
   </div>
 
+  <div class="card" id="stepMotivo" hidden>
+    <div class="step-label"><span class="n">2</span> Motivo do desligamento</div>
+    <div class="segmented" id="motivoSeg" style="margin-top:6px">
+      <button type="button" data-motivo="sem_justa_causa">Demitido(a) pela empresa</button>
+      <button type="button" data-motivo="pedido">Pedido de demissão</button>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <div>
+        <label for="dataDemissao">Data do desligamento</label><br>
+        <input type="date" id="dataDemissao">
+      </div>
+    </div>
+  </div>
+
   <div class="card" id="stepGerar" hidden>
-    <div class="step-label"><span class="n">2</span> Gerar formulário</div>
+    <div class="step-label"><span class="n">3</span> Gerar formulário</div>
     <button class="primary" id="btnGerar">Gerar e baixar PDF preenchido</button>
     <div class="status" id="gerarStatus"></div>
   </div>
@@ -128,7 +142,10 @@ const FIXED_DATE_FIELDS = { dia: "Campo de texto 43", mes: "Campo de texto 44", 
 const MESES_PT = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho",
   "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
-const MOTIVO_CANCELAMENTO_FIELD = "Caixa de seleção 20"; // Desistência do plano
+const MOTIVO_FIELDS = {
+  pedido: "Caixa de seleção 13",          // Pedido de demissão (empregado)
+  sem_justa_causa: "Caixa de seleção 16", // Demissão/exoneração sem justa causa
+};
 
 // Caixa (pt PDF, origem inferior-esquerda) para a imagem de assinatura, página 3 (index 2)
 const SIGNATURE_BOX = { pageIndex: 2, x0: 45, y0: 183, x1: 165, y1: 230 };
@@ -233,7 +250,12 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   setText("Campo de texto 5", formatCPF(data.cpf));
   for (const fid of cfg.numeroBeneficiarioFields) setText(fid, padCarteirinha(data.numero_beneficiario));
 
-  // Data de demissão -> fica em branco (motivo agora é "Desistência do plano").
+  // Data de demissão -> data informada pela pessoa que está preenchendo.
+  if (data.data_demissao) {
+    setText("Campo de texto 81", data.data_demissao.dia);
+    setText("Campo de texto 83", data.data_demissao.mes);
+    setText("Campo de texto 85", data.data_demissao.ano);
+  }
 
   if (data.data_inclusao) {
     const t = diffYMD(data.data_inclusao, new Date());
@@ -263,8 +285,9 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   setYesNo(cfg.informadoDireito);
   setYesNo(cfg.desejaManter);
 
-  // Motivo do cancelamento -> sempre "Desistência do plano"
-  setCheck(MOTIVO_CANCELAMENTO_FIELD, true);
+  // Motivo do cancelamento -> conforme escolha da pessoa (pedido de demissão
+  // ou demissão/exoneração sem justa causa)
+  for (const key in MOTIVO_FIELDS) setCheck(MOTIVO_FIELDS[key], key === data.motivo);
 
   // Gera as aparências dos campos de texto com o tamanho de fonte original do
   // campo (evita o bug de recorte/"+"), sem depender de NeedAppearances do viewer.
@@ -299,9 +322,20 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   const resultado = document.getElementById("resultado");
   const baseStatus = document.getElementById("baseStatus");
   const baseData = document.getElementById("baseData");
+  const stepMotivo = document.getElementById("stepMotivo");
+  const motivoSeg = document.getElementById("motivoSeg");
+  const dataDemissao = document.getElementById("dataDemissao");
   const stepGerar = document.getElementById("stepGerar");
   const btnGerar = document.getElementById("btnGerar");
   const gerarStatus = document.getElementById("gerarStatus");
+
+  motivoSeg.querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => {
+      motivoSeg.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      if (current) current.motivo = b.dataset.motivo;
+    });
+  });
 
   let outrosSet = null;
   let current = null; // { cpf, entry, tipo }
@@ -344,7 +378,7 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
 
     const entry = vidas.managed[cpf];
     if (entry) {
-      current = { cpf, entry, tipo: entry.dental && entry.saude ? null : (entry.dental ? "dental" : "saude") };
+      current = { cpf, entry, tipo: entry.dental && entry.saude ? null : (entry.dental ? "dental" : "saude"), motivo: null };
       renderFound();
       return;
     }
@@ -363,7 +397,12 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
     hideSteps();
   }
 
-  function hideSteps() { stepGerar.hidden = true; }
+  function hideSteps() {
+    stepMotivo.hidden = true;
+    stepGerar.hidden = true;
+    motivoSeg.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+    dataDemissao.value = "";
+  }
 
   function planoResumo(tipo) {
     const p = current.entry[tipo];
@@ -411,6 +450,7 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   }
 
   function showDetalhes() {
+    stepMotivo.hidden = false;
     stepGerar.hidden = false;
   }
 
@@ -419,9 +459,18 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
       gerarStatus.textContent = "Selecione o tipo de plano acima.";
       return;
     }
+    if (!current.motivo) {
+      gerarStatus.textContent = "Selecione o motivo do desligamento.";
+      return;
+    }
+    if (!dataDemissao.value) {
+      gerarStatus.textContent = "Informe a data do desligamento.";
+      return;
+    }
     btnGerar.disabled = true;
     gerarStatus.innerHTML = `<span class="spin"></span> Gerando PDF…`;
     try {
+      const [ano, mes, dia] = dataDemissao.value.split("-");
       const p = current.entry[current.tipo];
       const data = {
         tipo: current.tipo,
@@ -431,6 +480,8 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
         cpf: current.cpf,
         numero_beneficiario: p.carteirinha,
         data_inclusao: p.data_inclusao,
+        motivo: current.motivo,
+        data_demissao: { dia: String(parseInt(dia, 10)), mes: String(parseInt(mes, 10)), ano: ano },
       };
       const pdfBytes = await fillAmilPdf({
         PDFDocument: PDFLib.PDFDocument,
