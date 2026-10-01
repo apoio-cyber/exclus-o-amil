@@ -79,6 +79,8 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .q .na{font-size:.78rem;color:var(--muted)}
 .item{background:var(--sunk);border-radius:10px;padding:12px;display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
 .item .f label{font-size:.75rem}
+.req-note{font-size:.8rem;font-weight:600;color:var(--warn)}
+.tab-msg{font-size:.85rem;color:var(--err);background:var(--err-soft);border-radius:8px;padding:8px 12px;margin:-6px 0 12px}
 .preview{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);background:var(--sunk);border-radius:8px;padding:8px 10px;overflow-wrap:anywhere}
 table.sum{width:100%;border-collapse:collapse;font-size:.86rem}
 table.sum td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -327,13 +329,13 @@ function renderTabs(){
   const ps=people();if(!ps.find(p=>p.key===curTab))curTab='t';
   $('#tabs').innerHTML='';ps.forEach(p=>{const b=document.createElement('button');b.type='button';b.role='tab';
     b.textContent=`${p.label}: ${norm(p.nome).split(' ')[0]||''}`;b.setAttribute('aria-selected',p.key===curTab);
-    if(TRIED&&healthErrors(p).length)b.classList.add('pend');b.onclick=()=>{curTab=p.key;renderTabs();renderHealth()};$('#tabs').appendChild(b)});
+    if(TRIED&&healthErrors(p).length)b.classList.add('pend');b.onclick=()=>{if(p.key===curTab)return;const cur=people().find(x=>x.key===curTab);if(cur&&hasSimPend(cur)){const bx=showHealthErrors(cur).filter(x=>x.closest('.item')||x.dataset.ik==='obs');if(bx[0])bx[0].scrollIntoView({behavior:'smooth',block:'center'});showTabMsg();return}curTab=p.key;renderTabs();renderHealth()};$('#tabs').appendChild(b)});
 }
 function itemHTML(q,j,it){return `<div class="item" data-item="${j}">
-  <div class="f c4" data-ik="doenca"><label>Qual doença ou problema</label><input type="text" class="up" value="${esc(it.doenca)}" placeholder="Ex.: HIPERTENSAO"><div class="err"></div></div>
-  <div class="f c2" data-ik="diag"><label>Diagnóstico (mês/ano)</label><input type="text" class="mono" inputmode="numeric" data-mask="mesano" placeholder="mm/aaaa" value="${esc(it.diag)}"><div class="err"></div></div>
-  <div class="f c2" data-ik="trat"><span class="lbl">Está em tratamento?</span><div class="seg"><button type="button" data-v="S">Sim</button><button type="button" data-v="N">Não</button></div><div class="err"></div></div>
-  <div class="f c4" data-ik="qual" ${it.trat==='S'?'':'hidden'}><label>Qual tratamento ou remédio</label><input type="text" class="up" value="${esc(it.qual)}" placeholder="Ex.: LOSARTANA 50MG"><div class="err"></div></div>
+  <div class="f c4" data-ik="doenca"><label>Qual doença ou problema *</label><input type="text" class="up" value="${esc(it.doenca)}" placeholder="Ex.: HIPERTENSAO"><div class="err"></div></div>
+  <div class="f c2" data-ik="diag"><label>Quando foi diagnosticada (mês/ano) *</label><input type="text" class="mono" inputmode="numeric" data-mask="mesano" placeholder="mm/aaaa" value="${esc(it.diag)}"><div class="err"></div></div>
+  <div class="f c2" data-ik="trat"><span class="lbl">Está em tratamento? *</span><div class="seg"><button type="button" data-v="S">Sim</button><button type="button" data-v="N">Não</button></div><div class="err"></div></div>
+  <div class="f c4" data-ik="qual" ${it.trat==='S'?'':'hidden'}><label>Qual tratamento ou remédio *</label><input type="text" class="up" value="${esc(it.qual)}" placeholder="Ex.: LOSARTANA 50MG"><div class="err"></div></div>
   ${j>0?'<div class="c6"><button type="button" class="btn link" data-rmitem>Remover esta doença</button></div>':''}
  </div>`}
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
@@ -355,9 +357,9 @@ function renderHealth(){
     const det=$('.det',q);
     const drawDet=()=>{
       if(a.v!=='S'){det.innerHTML='';return}
-      if(i===25){det.innerHTML=`<div class="f" data-ik="obs"><label>Escreva o comentário</label><textarea class="up" maxlength="300">${esc(a.obs)}</textarea><div class="err"></div></div>`;
+      if(i===25){det.innerHTML=`<div class="f" data-ik="obs"><label>Escreva o comentário *</label><textarea class="up" maxlength="300">${esc(a.obs)}</textarea><div class="err"></div></div>`;
         $('textarea',det).oninput=e=>{a.obs=e.target.value;prev()};}
-      else{det.innerHTML=a.items.map((it,j)=>itemHTML(i,j,it)).join('')+(a.items.length<3?'<div><button type="button" class="btn ghost" data-additem style="padding:6px 12px;font-size:.84rem">+ Outra doença nesta pergunta</button></div>':'');
+      else{det.innerHTML='<div class="req-note">Você respondeu Sim. Preencha todos os campos com * para continuar.</div>'+a.items.map((it,j)=>itemHTML(i,j,it)).join('')+(a.items.length<3?'<div><button type="button" class="btn ghost" data-additem style="padding:6px 12px;font-size:.84rem">+ Outra doença nesta pergunta</button></div>':'');
         $$('.item',det).forEach(el=>{const it=a.items[+el.dataset.item];segSet($('.seg',el),it.trat);
           el.addEventListener('input',e=>{const k=e.target.closest('[data-ik]').dataset.ik;it[k]=e.target.value;prev()});
           el.addEventListener('segchange',e=>{e.stopPropagation();it.trat=e.detail;$('[data-ik="qual"]',el).hidden=e.detail!=='S';prev()});
@@ -384,13 +386,15 @@ function healthErrors(p){
     if(a.v!=='S')continue;
     if(i===25){if(norm(a.obs).length<3)errs.push({q:i,ik:'obs',msg:'Escreva o comentário.'});continue}
     a.items.forEach((it,j)=>{
-      if(norm(it.doenca).length<3)errs.push({q:i,j,ik:'doenca',msg:'Informe a doença.'});
-      if(!validMesAno(it.diag||''))errs.push({q:i,j,ik:'diag',msg:'Use mm/aaaa.'});
-      if(!it.trat)errs.push({q:i,j,ik:'trat',msg:'Responda.'});
-      if(it.trat==='S'&&norm(it.qual).length<3)errs.push({q:i,j,ik:'qual',msg:'Informe o tratamento.'});
+      if(norm(it.doenca).length<3)errs.push({q:i,j,ik:'doenca',msg:'Obrigatório: informe qual é a doença.'});
+      if(!validMesAno(it.diag||''))errs.push({q:i,j,ik:'diag',msg:'Obrigatório: mês e ano do diagnóstico (mm/aaaa).'});
+      if(!it.trat)errs.push({q:i,j,ik:'trat',msg:'Obrigatório: responda Sim ou Não.'});
+      if(it.trat==='S'&&norm(it.qual).length<3)errs.push({q:i,j,ik:'qual',msg:'Obrigatório: informe o tratamento ou remédio.'});
     });}
   return errs;
 }
+function hasSimPend(p){return healthErrors(p).some(e=>e.ik)}
+function showTabMsg(){let m=$('#tabMsg');if(!m){m=document.createElement('div');m.id='tabMsg';m.className='tab-msg';$('#tabs').after(m)}m.textContent='Complete os detalhes das respostas “Sim” desta pessoa antes de passar para a próxima.';clearTimeout(m._t);m._t=setTimeout(()=>m.remove(),6000)}
 function showHealthErrors(p){
   const errs=healthErrors(p);$$('#health .bad').forEach(b=>mark(b,''));const boxes=[];
   errs.forEach(er=>{let box;
