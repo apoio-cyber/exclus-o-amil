@@ -536,14 +536,18 @@ function renderSummary(){
   $('#sum').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${esc(r[1])}</td></tr>`).join('');
   const n=people().length;
   $('#signList').innerHTML=`<li><b>Ficha Cadastral:</b> a assinatura é da empresa. Só rubrique.</li>
-   <li><b>Carta de Orientação:</b> assine na segunda página, no lado do beneficiário.</li>
+   <li><b>Carta de Orientação</b> (${n>1?n+' cartas, uma por pessoa':'1 carta'}): assine na segunda página, no lado do beneficiário.${menores().length?` Para ${menores().map(x=>norm(x.nome).split(' ')[0]).join(', ')} (menor de idade), o nome já sai preenchido e quem assina é o titular, ${norm(S.t.nome).split(' ')[0]}.`:''}</li>
    <li><b>Declaração de Saúde</b> (${n>1?n+' declarações, uma por pessoa':'1 declaração'}): assine nas páginas 3, 4, 5, 6 (duas assinaturas) e 7. Para menor de idade, assina o responsável.</li>`;
   renderDownloads();renderChecklist();
 }
+function idade(nasc){const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(nasc||'');if(!m)return 99;const b=new Date(+m[3],+m[2]-1,+m[1]);let a=NOW.getFullYear()-b.getFullYear();if(NOW<new Date(NOW.getFullYear(),b.getMonth(),b.getDate()))a--;return a}
+function menores(){return people().filter(p=>!p.isT&&idade(p.nasc)<18)}
 function renderChecklist(){
   const first=s=>norm(s).split(' ')[0]||'';
-  const groups=[{t:'Formulários',items:['Ficha Cadastral (arquivo 1)','Carta de Orientação, rubricada e assinada (arquivo 2)',
-      ...people().map((p,k)=>`Declaração de Saúde de ${first(p.nome)}, rubricada e assinada (arquivo ${3+k})`)]},
+  const PP=people(),NN=PP.length;
+  const groups=[{t:'Formulários',items:['Ficha Cadastral (arquivo 1)',
+      ...PP.map((p,k)=>`Carta de Orientação de ${first(p.nome)}, rubricada e assinada (arquivo ${2+k})`),
+      ...PP.map((p,k)=>`Declaração de Saúde de ${first(p.nome)}, rubricada e assinada (arquivo ${2+NN+k})`)]},
     {t:`Titular · ${first(S.t.nome)}`,items:['RG','CPF','CTPS digital (dados pessoais e registro na Cucinare)','Comprovante de endereço','Cartão Nacional de Saúde (CNS)']}];
   S.deps.filter(d=>d.tipo==='conj').forEach(d=>groups.push({t:`Cônjuge · ${first(d.nome)}`,items:['Certidão de casamento','RG','CPF','Cartão Nacional de Saúde (CNS)']}));
   S.deps.filter(d=>d.tipo==='filho').forEach(d=>groups.push({t:`Filho(a) · ${first(d.nome)}`,items:['RG e CPF (se não tiver, certidão de nascimento)','Cartão Nacional de Saúde (CNS)']}));
@@ -556,8 +560,9 @@ function fileBase(s){return norm(s).replace(/ /g,'_')}
 function docsList(){
   const tn=fileBase(S.t.nome);const ps=people();const L=[
     {n:1,label:'Ficha Cadastral',pages:'1 página',file:`1_FICHA_CADASTRAL_${tn}.pdf`,build:buildA1},
-    {n:2,label:'Carta de Orientação ao Beneficiário',pages:'2 páginas',file:`2_CARTA_ORIENTACAO_${tn}.pdf`,build:buildA2}];
-  ps.forEach((p,k)=>L.push({n:3+k,label:`Declaração de Saúde · ${p.label}`,sub:norm(p.nome),pages:'7 páginas',file:`${3+k}_DECLARACAO_SAUDE_${fileBase(p.nome)}.pdf`,build:()=>buildA3(p)}));
+  ];const N=ps.length;
+  ps.forEach((p,k)=>L.push({n:2+k,label:`Carta de Orientação · ${p.label}`,sub:norm(p.nome),pages:'2 páginas',file:`${2+k}_CARTA_ORIENTACAO_${fileBase(p.nome)}.pdf`,build:()=>buildA2(p)}));
+  ps.forEach((p,k)=>L.push({n:2+N+k,label:`Declaração de Saúde · ${p.label}`,sub:norm(p.nome),pages:'7 páginas',file:`${2+N+k}_DECLARACAO_SAUDE_${fileBase(p.nome)}.pdf`,build:()=>buildA3(p)}));
   return L;
 }
 function renderDownloads(){
@@ -617,11 +622,11 @@ async function buildA1(){
   P.text(pg,`${norm(t.cidade)}, ${TODAY_STR}`,{x:84,t:499.5,size:8.5});
   return doc;
 }
-async function buildA2(){
+async function buildA2(p){
   const doc=await load('a2');const [f,fb]=await fonts(doc);const P=mk(doc,f,fb);const pg=doc.getPage(1);
   P.text(pg,norm(S.t.cidade),{x:58,t:297,maxW:132,size:9.5});
   [[206.5,TODAY.d],[232,TODAY.m],[259.5,TODAY.y],[447.4,TODAY.d],[473,TODAY.m],[500.4,TODAY.y]].forEach(([cx,v])=>P.text(pg,v,{cx,t:297,size:9.5}));
-  P.text(pg,norm(S.t.nome),{x:88,t:322,maxW:185,size:9});
+  P.text(pg,norm((p||{}).nome||S.t.nome),{x:88,t:322,maxW:185,size:9});
   return doc;
 }
 const QPOS={1:[0,383,438,410],2:[0,438,507,466],3:[0,508,563,521],4:[0,563,633,591],5:[0,633,702,660],6:[0,702,771,730],
