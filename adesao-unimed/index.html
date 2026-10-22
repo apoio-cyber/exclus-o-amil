@@ -621,7 +621,8 @@ async function buildA1(){
   const doc=await load('a1');const [f,fb]=await fonts(doc);const P=mk(doc,f,fb);const pg=doc.getPage(0);const t=S.t;
   const H1=pg.getHeight();pg.drawRectangle({x:20,y:H1-127.6,width:110,height:18.2,color:PDFLib.rgb(51/255,153/255,102/255)});
   {const lb='DATA DE ADMISSÃO:',w=fb.widthOfTextAtSize(lb,8);pg.drawText(lb,{x:75-w/2,y:H1-121.5,size:8,font:fb,color:PDFLib.rgb(1,1,1)})}
-  P.text(pg,t.adm,{x:134,t:122,size:8.5});P.text(pg,TODAY_STR,{x:134,t:141,size:8.5});
+  P.text(pg,t.adm,{x:134,t:122,size:8.5});
+  {const c='91081000',w=fb.widthOfTextAtSize(c,9);pg.drawText(c,{x:75-w/2,y:H1-174.2,size:9,font:fb,color:PDFLib.rgb(0,0,0.85)})}P.text(pg,TODAY_STR,{x:134,t:141,size:8.5});
   P.text(pg,'X',{cx:356,t:122,size:10,b:1});if(S.deps.length)P.text(pg,'X',{cx:356,t:141,size:10,b:1});
   P.text(pg,norm(t.nome),{x:23,t:205,maxW:315});P.text(pg,t.nasc,{cx:380.6,t:205});P.text(pg,t.sexo,{cx:431,t:205,b:1});
   P.text(pg,t.civil,{cx:635.7,t:205});P.text(pg,norm(t.mae),{x:23,t:236,maxW:315});
