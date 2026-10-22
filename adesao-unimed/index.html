@@ -251,7 +251,8 @@ table.sum td:first-child{color:var(--muted);width:40%}
       <div class="f c2" data-f="t.rg"><label for="t_rg">RG</label><input id="t_rg" type="text" class="mono up" placeholder="Como está no documento"><div class="err"></div></div>
       <div class="f c2 half" data-f="t.cpf"><label for="t_cpf">CPF</label><input id="t_cpf" type="text" class="mono" inputmode="numeric" placeholder="000.000.000-00" data-mask="cpf"><div class="err"></div></div>
       <div class="f c2 half" data-f="t.tel"><label for="t_tel">Telefone</label><input id="t_tel" type="tel" class="mono" inputmode="numeric" placeholder="(12) 99999-9999" data-mask="tel"><div class="err"></div></div>
-      <div class="f c6" data-f="t.sus"><label for="t_sus">Cartão Nacional de Saúde (CNS / Cartão SUS)</label><input id="t_sus" type="text" class="mono" inputmode="numeric" placeholder="000 0000 0000 0000" data-mask="sus"><span class="hint">Obrigatório. 15 números, no verso do cartão SUS ou no app Meu SUS Digital.</span><div class="err"></div></div>
+      <div class="f c2" data-f="t.adm"><label for="t_adm">Data de admissão na empresa</label><input id="t_adm" type="text" class="mono" inputmode="numeric" placeholder="dd/mm/aaaa" data-mask="date"><span class="hint">Está na carteira de trabalho (CTPS digital).</span><div class="err"></div></div>
+      <div class="f c4" data-f="t.sus"><label for="t_sus">Cartão Nacional de Saúde (CNS / Cartão SUS)</label><input id="t_sus" type="text" class="mono" inputmode="numeric" placeholder="000 0000 0000 0000" data-mask="sus"><span class="hint">Obrigatório. 15 números, no verso do cartão SUS ou no app Meu SUS Digital.</span><div class="err"></div></div>
     </div>
     <div class="nav"><button class="btn ghost" type="button" data-home>Voltar ao início</button><button class="btn" type="button" data-go="2">Continuar</button></div>
   </section>
@@ -361,7 +362,7 @@ function segSet(seg,v){seg.dataset.val=v||'';$$('button',seg).forEach(x=>x.setAt
 function readTitular(){
   const t=S.t;t.nome=$('#t_nome').value;t.nasc=$('#t_nasc').value;t.sexo=$('[data-seg="t.sexo"]').dataset.val||'';
   t.civil=$('#t_civil').value;t.mae=$('#t_mae').value;t.rua=$('#t_rua').value;t.num=$('#t_num').value;t.comp=$('#t_comp').value;
-  t.end=[norm(t.rua),norm(t.num),norm(t.comp)].filter(Boolean).join(', ');t.sus=$('#t_sus').value;t.bairro=$('#t_bairro').value;t.cidade=$('#t_cidade').value;
+  t.end=[norm(t.rua),norm(t.num),norm(t.comp)].filter(Boolean).join(', ');t.sus=$('#t_sus').value;t.adm=$('#t_adm').value;t.bairro=$('#t_bairro').value;t.cidade=$('#t_cidade').value;
   t.cep=$('#t_cep').value;t.rg=$('#t_rg').value;t.cpf=$('#t_cpf').value;t.tel=$('#t_tel').value;
 }
 function mark(box,msg){if(!box)return;box.classList.toggle('bad',!!msg);const e=$('.err',box);if(e)e.textContent=msg||''}
@@ -382,6 +383,7 @@ function checkTitular(){
   r('cpf',validCPF(t.cpf),'CPF inválido. Confira os números.');
   r('tel',digits(t.tel).length>=10,'Informe DDD e número.');
   r('sus',digits(t.sus).length===15,'O CNS é obrigatório e tem 15 números.');
+  r('adm',validDate(t.adm)&&+t.adm.slice(6)>=1950,'Informe a data de admissão (dd/mm/aaaa).');
   return errs;
 }
 
@@ -540,7 +542,7 @@ $$('[data-go]').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.go)));
 
 function renderSummary(){
   const t=S.t;const rows=[['Titular',norm(t.nome)],['Nascimento / sexo',`${t.nasc} · ${t.sexo}`],['Estado civil',t.civil],['Mãe',norm(t.mae)],
-    ['Endereço',`${norm(t.end)} · ${norm(t.bairro)} · ${norm(t.cidade)} · ${t.cep}`],['RG / CPF',`${norm(t.rg)} · ${t.cpf}`],['CNS',t.sus],['Telefone',t.tel],
+    ['Endereço',`${norm(t.end)} · ${norm(t.bairro)} · ${norm(t.cidade)} · ${t.cep}`],['RG / CPF',`${norm(t.rg)} · ${t.cpf}`],['CNS',t.sus],['Data de admissão',t.adm],['Telefone',t.tel],
     ['Local e data',`${norm(t.cidade)}, ${TODAY_STR}`]];
   S.deps.forEach(d=>rows.push([d.tipo==='conj'?'Cônjuge':'Filho(a)',`${norm(d.nome)} · ${d.sexo} · ${d.nasc}`]));
   people().forEach(p=>{const h=H(p);const sims=Object.entries(h.a).filter(([i,a])=>a.v==='S').map(([i])=>i);
@@ -617,7 +619,9 @@ async function fonts(doc){return [await doc.embedFont(PDFLib.StandardFonts.Helve
 
 async function buildA1(){
   const doc=await load('a1');const [f,fb]=await fonts(doc);const P=mk(doc,f,fb);const pg=doc.getPage(0);const t=S.t;
-  P.text(pg,TODAY_STR,{x:134,t:122,size:8.5});P.text(pg,TODAY_STR,{x:134,t:141,size:8.5});
+  const H1=pg.getHeight();pg.drawRectangle({x:20,y:H1-127.6,width:110,height:18.2,color:PDFLib.rgb(51/255,153/255,102/255)});
+  {const lb='DATA DE ADMISSÃO:',w=fb.widthOfTextAtSize(lb,8);pg.drawText(lb,{x:75-w/2,y:H1-121.5,size:8,font:fb,color:PDFLib.rgb(1,1,1)})}
+  P.text(pg,t.adm,{x:134,t:122,size:8.5});P.text(pg,TODAY_STR,{x:134,t:141,size:8.5});
   P.text(pg,'X',{cx:356,t:122,size:10,b:1});if(S.deps.length)P.text(pg,'X',{cx:356,t:141,size:10,b:1});
   P.text(pg,norm(t.nome),{x:23,t:205,maxW:315});P.text(pg,t.nasc,{cx:380.6,t:205});P.text(pg,t.sexo,{cx:431,t:205,b:1});
   P.text(pg,t.civil,{cx:635.7,t:205});P.text(pg,norm(t.mae),{x:23,t:236,maxW:315});
