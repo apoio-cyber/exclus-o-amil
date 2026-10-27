@@ -396,11 +396,12 @@ function depCard(d){
    <div class="f c6" data-k="mae"><label for="d${d.id}_mae">Nome completo da mãe ${isC?'do cônjuge':'do dependente'}</label><input id="d${d.id}_mae" type="text" class="up"><div class="err"></div></div>
    <div class="f c2 half" data-k="sexo"><span class="lbl">Sexo</span><div class="seg"><button type="button" data-v="M">Masculino</button><button type="button" data-v="F">Feminino</button></div><div class="err"></div></div>
    <div class="f c2 half" data-k="nasc"><label for="d${d.id}_nasc">Data de nascimento</label><input id="d${d.id}_nasc" type="text" class="mono" inputmode="numeric" placeholder="dd/mm/aaaa" data-mask="date"><div class="err"></div></div>
+   ${isC?`<div class="f c2" data-k="casamento"><label for="d${d.id}_casamento">Data do casamento ou início da união</label><input id="d${d.id}_casamento" type="text" class="mono" inputmode="numeric" placeholder="dd/mm/aaaa" data-mask="date"><div class="err"></div></div>`:''}
    <div class="f c2" data-k="cpf"><label for="d${d.id}_cpf">CPF</label><input id="d${d.id}_cpf" type="text" class="mono" inputmode="numeric" placeholder="000.000.000-00" data-mask="cpf"><div class="err"></div></div>
    <div class="f c6" data-k="sus"><label for="d${d.id}_sus">Cartão Nacional de Saúde (CNS / Cartão SUS)</label><input id="d${d.id}_sus" type="text" class="mono" inputmode="numeric" placeholder="000 0000 0000 0000" data-mask="sus"><span class="hint">Obrigatório. 15 números.</span><div class="err"></div></div>
   </div>`;
   const set=(k,v)=>{const i=$(`[data-k="${k}"] input`,el);if(i)i.value=v||''};
-  ['nome','mae','nasc','cpf','sus'].forEach(k=>set(k,d[k]));segSet($('.seg',el),d.sexo);
+  ['nome','mae','nasc','casamento','cpf','sus'].forEach(k=>set(k,d[k]));segSet($('.seg',el),d.sexo);
   el.addEventListener('input',e=>{const k=e.target.closest('[data-k]')?.dataset.k;if(k)d[k]=e.target.value});
   el.addEventListener('segchange',e=>{d.sexo=e.detail});
   $('[data-rm]',el).addEventListener('click',()=>{S.deps=S.deps.filter(x=>x!==d);delete S.health['d'+d.id];renderDeps()});
@@ -896,5 +897,27 @@ const PDFS={"a1": "JVBERi0xLjcKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0Zpb
 })();
 </script>
 <script>__avisoPrazo('#t_adm');</script>
+<script>
+/* Aviso: data do casamento/união com mais de 30 dias (inclusão de cônjuge com titular já ativo) */
+(function(){
+  var CSS='margin-top:6px;background:#fbe9ea;color:#a4262c;border:1px solid #f0b8bb;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;line-height:1.35';
+  function lerData(v){v=String(v||'').trim(); var m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return new Date(+m[1],m[2]-1,+m[3]);
+    m=v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if(m) return new Date(+m[3],m[2]-1,+m[1]); return null;}
+  function checar(inp){
+    var box=inp.closest('.f')||inp.parentNode, av=box.querySelector('.aviso-uniao');
+    var a=lerData(inp.value), r=new Date(); r.setHours(0,0,0,0);
+    var dias=a?Math.round((r-a)/864e5):null;
+    if(dias!==null && dias>30){
+      if(!av){av=document.createElement('div'); av.className='aviso-uniao'; av.setAttribute('role','alert'); av.style.cssText=CSS; box.appendChild(av);}
+      av.textContent='Casamento/união há '+dias+' dias. Se o titular já estiver ativo no plano, a inclusão do cônjuge passou do prazo de 30 dias: haverá cumprimento de carências.';
+    } else if(av) av.remove();
+  }
+  window.__avisoUniao=function(sel){
+    ['input','change'].forEach(function(ev){document.addEventListener(ev,function(e){if(e.target.matches&&e.target.matches(sel)) checar(e.target);});});
+    new MutationObserver(function(){document.querySelectorAll(sel).forEach(function(i){var b=i.closest('.f'); if(i.value&&b&&!b.querySelector('.aviso-uniao')) checar(i);});}).observe(document.body,{childList:true,subtree:true});
+  };
+})();
+</script>
+<script>__avisoUniao('[data-k="casamento"] input');</script>
 </body>
 </html>
