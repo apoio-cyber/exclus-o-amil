@@ -312,6 +312,8 @@ async function fillAmilPdf({ PDFDocument, modeloBytes, signatureBytes, data }) {
   // Gera as aparências dos campos de texto com o tamanho de fonte original do
   // campo (evita o bug de recorte/"+"), sem depender de NeedAppearances do viewer.
   form.updateFieldAppearances();
+  // Trava o PDF: os campos viram texto fixo (a operadora não aceita formulário editável).
+  form.flatten();
 
   // --- imagem de assinatura/carimbo, página 3 ---
   if (signatureBytes) {
