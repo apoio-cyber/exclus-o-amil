@@ -6,6 +6,35 @@
 <meta name="robots" content="noindex">
 <title>Adesão Plano de Saúde Cucinare</title>
 <style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<!-- prefill-sistema: lê o link antes da página trocar o endereço -->
+<script>
+/* Preenchimento automático vindo do sistema de movimentações (aba Consultar vidas).
+   O link traz ?pre=1&nome=&cpf=&cart=&nasc=&mae=&adm=&end=&tel=&cidade=&dem=&mot= */
+(function () {
+  var q = new URLSearchParams(location.search);
+  if (q.get('pre') !== '1') return;
+  window.PRE = {
+    get: function (k) { return (q.get(k) || '').trim(); },
+    br: function (iso) { var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : (iso || ''); },
+    set: function (sel, v) {
+      var e = typeof sel === 'string' ? document.querySelector(sel) : sel;
+      if (!e || v == null || v === '') return;
+      e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true }));
+    },
+    radio: function (name, val) {
+      var r = document.querySelector('input[name="' + name + '"][value="' + val + '"]');
+      if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); r.dispatchEvent(new Event('click', { bubbles: true })); }
+    },
+    aviso: function () {
+      var d = document.createElement('div');
+      d.setAttribute('role', 'status');
+      d.style.cssText = 'position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:9999;background:#e1f0f8;color:#0d2a3d;border:1px solid #9cc9e6;border-radius:10px;padding:10px 14px;font:600 14px/1.4 system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.15);max-width:92vw';
+      d.textContent = 'Dados preenchidos a partir da base de vidas ativas. Confira, anexe o TRCT se tiver e complete o que faltar.';
+      document.body.appendChild(d); setTimeout(function () { d.remove(); }, 9000);
+    }
+  };
+})();
+</script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -919,5 +948,23 @@ const PDFS={"a1": "JVBERi0xLjcKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0Zpb
 })();
 </script>
 <script>__avisoUniao('[data-k="casamento"] input');</script>
+<!-- prefill-sistema -->
+<script>
+
+window.addEventListener('load', function () { setTimeout(function () {
+  if (!window.PRE) return; var P = PRE;
+  var b = document.querySelector('.choice[data-mode="excl"]'); if (b) b.click();
+  setTimeout(function () {
+    P.set('#x_nome', P.get('nome').toUpperCase()); P.set('#x_cpf', P.get('cpf'));
+    if (P.get('nasc')) P.set('#x_nasc', P.br(P.get('nasc')));
+    P.set('#x_mae', P.get('mae').toUpperCase());
+    if (P.get('adm')) P.set('#x_adm', P.br(P.get('adm')));
+    if (P.get('dem')) P.set('#x_afa', P.br(P.get('dem')));
+    P.set('#x_cidade', P.get('cidade').toUpperCase());
+    P.radio('x_motivo', P.get('mot') === 'pedido' ? 'solicitacao' : 'sem_justa');
+    P.aviso();
+  }, 200);
+}, 300); });
+</script>
 </body>
 </html>
