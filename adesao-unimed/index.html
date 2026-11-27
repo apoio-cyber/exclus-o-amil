@@ -38,7 +38,7 @@
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: coluna única de formulário com trilho de etapas no topo; cartões só para cada pessoa/pergunta */
 :root{
@@ -116,7 +116,13 @@ table.sum td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:
 table.sum td:first-child{color:var(--muted);width:40%}
 .sign{padding-left:1.1rem;margin:6px 0 0}.sign li{margin-bottom:4px}
 .ok{color:var(--accent);font-weight:600}.bad-t{color:var(--err)}
-.choose-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.letter-wrap{position:relative;margin:6px 0 4px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.letter{background:#fffdf5;color:#1d2f6f;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:28px 22px 34px 44px;font-family:"Caveat","Segoe Script","Bradley Hand",cursive;font-size:clamp(1.25rem,4.4vw,1.55rem);line-height:34px;
+ background-image:linear-gradient(90deg,transparent 30px,rgba(220,80,80,.45) 30px,rgba(220,80,80,.45) 31.5px,transparent 31.5px),repeating-linear-gradient(transparent 0 33px,rgba(70,110,180,.25) 33px 34px);background-position:0 0,0 29px;transform:rotate(-.4deg)}
+.letter p{margin:0 0 34px}.letter .r{text-align:right}.letter .sig{margin:46px auto 0;text-align:center;border-top:1.5px solid #1d2f6f;width:62%;font-size:.8em;line-height:30px}
+.letter u{text-decoration:none;color:#0b5a8a}
+.letter-stamp{position:absolute;top:10px;right:12px;font:600 .62rem/1 var(--f-mono);letter-spacing:.1em;color:#b3261e;border:1.5px solid #b3261e;border-radius:4px;padding:4px 6px;transform:rotate(4deg);background:#fffdf5}
+.choose-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:22px}
 @media (max-width:620px){.choose-grid{grid-template-columns:1fr}}
 .choice{font:inherit;text-align:left;cursor:pointer;background:var(--surface);color:var(--fg);border:1.5px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-width:0}
 .choice:hover{border-color:var(--accent)}
@@ -167,7 +173,41 @@ table.sum td:first-child{color:var(--muted);width:40%}
         <strong>Exclusão de funcionário desligado</strong>
         <span class="choice-t">Formulário de exclusão e declaração do ex-empregado, a partir do termo de rescisão.</span>
       </button>
+      <button type="button" class="choice" data-mode="vol">
+        <span class="tag">Funcionário</span>
+        <strong>Desistência do plano</strong>
+        <span class="choice-t">Para quem continua na empresa e quer sair do plano: modelo da carta de próprio punho.</span>
+      </button>
     </div>
+  </div>
+
+  <div id="vol" hidden>
+    <section class="step">
+      <p class="lead">A Unimed pede uma <b>carta escrita à mão</b> por quem vai sair do plano. Não é possível baixar nem imprimir o modelo: copie o texto abaixo numa folha em branco, com caneta.</p>
+      <div class="card">
+        <div class="card-h"><h3>Preencha para ver a carta com os seus dados</h3><span class="tag">opcional</span></div>
+        <div class="grid">
+          <div class="f c6"><label for="v_nome">Nome completo</label><input id="v_nome" type="text" class="up" autocomplete="off"></div>
+          <div class="f c2 half"><label for="v_cpf">CPF</label><input id="v_cpf" type="text" class="mono" inputmode="numeric" placeholder="000.000.000-00" data-mask="cpf"></div>
+          <div class="f c2 half"><label for="v_rg">RG</label><input id="v_rg" type="text" class="mono up"></div>
+          <div class="f c2"><label for="v_cidade">Cidade</label><input id="v_cidade" type="text" placeholder="Caçapava"></div>
+        </div>
+      </div>
+      <div class="letter-wrap" aria-label="Modelo da carta de próprio punho">
+        <div class="letter" id="v_letter"></div>
+        <div class="letter-stamp">MODELO · COPIE À MÃO</div>
+      </div>
+      <div class="note"><b>Como fazer</b>
+        <ol class="sign">
+          <li>Escreva a carta <b>à mão</b>, com caneta azul ou preta, numa folha em branco. Não use computador nem impressão.</li>
+          <li>Copie o texto exatamente como está no modelo, com seus dados. O número do contrato é <b>091081000</b>.</li>
+          <li>Assine no final, igual ao seu documento.</li>
+          <li>Se um dependente também vai sair, cada pessoa maior de idade faz a própria carta. Para menor de idade, o titular escreve a carta citando o nome do dependente.</li>
+          <li>Fotografe ou digitalize a carta, junto com uma cópia do seu documento com foto, e envie pela plataforma indicada pela empresa.</li>
+        </ol>
+      </div>
+      <div class="nav"><button class="btn ghost" type="button" data-home>Voltar ao início</button><span></span></div>
+    </section>
   </div>
 
   <div id="excl" hidden>
@@ -697,16 +737,28 @@ async function buildA3(p){
 const HEAD={
   home:['Plano de saúde Unimed Vale Novo Paulista','Escolha o que você precisa fazer. Nada do que for digitado fica salvo: os PDFs são montados aqui no seu navegador.'],
   incl:['Documentos de adesão ao plano de saúde','Preencha uma vez e baixe a Ficha Cadastral, a Carta de Orientação e a Declaração de Saúde já preenchidas, prontas para assinar. Nada do que você digitar fica salvo: o PDF é montado aqui no seu navegador.'],
+  vol:['Desistência do plano de saúde','Para funcionário que continua na empresa e quer sair do plano.'],
   excl:['Exclusão do plano de saúde','Uso do RH. Anexe o termo de rescisão, confira os dados e baixe o formulário de exclusão e a declaração do ex-empregado preenchidos. Nada fica salvo: os PDFs são montados aqui no seu navegador.']};
 function setMode(m){
-  $('#choose').hidden=m!=='home';$('#incl').hidden=m!=='incl';$('#excl').hidden=m!=='excl';
+  $('#choose').hidden=m!=='home';$('#incl').hidden=m!=='incl';$('#excl').hidden=m!=='excl';$('#vol').hidden=m!=='vol';if(m==='vol')drawLetter();
   $('header.top h1').textContent=HEAD[m][0];$('header.top p').textContent=HEAD[m][1];
-  try{history.replaceState(null,'',m==='home'?location.pathname:'#'+(m==='incl'?'inclusao':'exclusao'))}catch(e){}
+  try{history.replaceState(null,'',m==='home'?location.pathname:'#'+({incl:'inclusao',excl:'exclusao',vol:'desistencia'}[m]))}catch(e){}
   window.scrollTo({top:0});
 }
 $$('.choice').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 $$('[data-home]').forEach(b=>b.addEventListener('click',()=>setMode('home')));
-setMode(location.hash==='#exclusao'?'excl':location.hash==='#inclusao'?'incl':'home');
+const MES_EXT=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function drawLetter(){
+  const v=id=>($(id).value||'').trim();const nome=norm(v('#v_nome')),cpf=v('#v_cpf'),rg=v('#v_rg').toUpperCase(),cid=v('#v_cidade');
+  const u=(x,ph)=>x?`<u>${esc(x)}</u>`:ph;const d=new Date();
+  $('#v_letter').innerHTML=`<p class="r">${u(cid,'(sua cidade)')}, ${d.getDate()} de ${MES_EXT[d.getMonth()]} de ${d.getFullYear()}.</p>
+   <p>Eu, ${u(nome,'(seu nome completo)')}, inscrito(a) no CPF sob o nº ${u(cpf,'(seu CPF)')}, portador(a) do RG sob o nº ${u(rg,'(seu RG)')}, solicito a minha exclusão do plano de saúde mantido junto à Unimed Vale Novo Paulista, através do contrato firmado pela empresa CUCINARE PRO ALIMENTACAO LTDA nº 091081000.</p>
+   <div class="sig">(sua assinatura)</div>`;
+}
+['#v_nome','#v_cpf','#v_rg','#v_cidade'].forEach(id=>$(id).addEventListener('input',drawLetter));
+$('#vol').addEventListener('contextmenu',e=>{if(e.target.closest('.letter-wrap'))e.preventDefault()});
+$('#vol').addEventListener('copy',e=>{const sel=getSelection();if(sel&&sel.anchorNode&&$('.letter-wrap').contains(sel.anchorNode))e.preventDefault()});
+setMode({'#exclusao':'excl','#inclusao':'incl','#desistencia':'vol'}[location.hash]||'home');
 
 /* ================= EXCLUSÃO ================= */
 const MESES=['JANEIRO','FEVEREIRO','MARCO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
