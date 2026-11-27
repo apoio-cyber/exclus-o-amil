@@ -121,6 +121,7 @@ table.sum td:first-child{color:var(--muted);width:40%}
  background-image:linear-gradient(90deg,transparent 30px,rgba(220,80,80,.45) 30px,rgba(220,80,80,.45) 31.5px,transparent 31.5px),repeating-linear-gradient(transparent 0 33px,rgba(70,110,180,.25) 33px 34px);background-position:0 0,0 29px;transform:rotate(-.4deg)}
 .letter p{margin:0 0 34px}.letter .r{text-align:right}.letter .sig{margin:46px auto 0;text-align:center;border-top:1.5px solid #1d2f6f;width:62%;font-size:.8em;line-height:30px}
 .letter u{text-decoration:none;color:#0b5a8a}
+.letter .sig2{width:86%;margin-top:40px;font-size:.72em;line-height:26px}
 .letter-stamp{position:absolute;top:10px;right:12px;font:600 .62rem/1 var(--f-mono);letter-spacing:.1em;color:#b3261e;border:1.5px solid #b3261e;border-radius:4px;padding:4px 6px;transform:rotate(4deg);background:#fffdf5}
 .choose-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:22px}
 @media (max-width:620px){.choose-grid{grid-template-columns:1fr}}
@@ -187,7 +188,7 @@ table.sum td:first-child{color:var(--muted);width:40%}
       <div class="card">
         <div class="card-h"><h3>Preencha para ver a carta com os seus dados</h3><span class="tag">opcional</span></div>
         <div class="grid">
-          <div class="f c6"><label for="v_nome">Nome completo</label><input id="v_nome" type="text" class="up" autocomplete="off"></div>
+          <div class="f c6"><label for="v_nome">Nome completo do titular</label><input id="v_nome" type="text" class="up" autocomplete="off"></div>
           <div class="f c2 half"><label for="v_cpf">CPF</label><input id="v_cpf" type="text" class="mono" inputmode="numeric" placeholder="000.000.000-00" data-mask="cpf"></div>
           <div class="f c2 half"><label for="v_rg">RG</label><input id="v_rg" type="text" class="mono up"></div>
           <div class="f c2"><label for="v_cidade">Cidade</label><input id="v_cidade" type="text" placeholder="Caçapava"></div>
@@ -201,8 +202,8 @@ table.sum td:first-child{color:var(--muted);width:40%}
         <ol class="sign">
           <li>Escreva a carta <b>à mão</b>, com caneta azul ou preta, numa folha em branco. Não use computador nem impressão.</li>
           <li>Copie o texto exatamente como está no modelo, com seus dados. O número do contrato é <b>091081000</b>.</li>
-          <li>Assine no final, igual ao seu documento.</li>
-          <li>Se um dependente também vai sair, cada pessoa maior de idade faz a própria carta. Para menor de idade, o titular escreve a carta citando o nome do dependente.</li>
+          <li>Quem escreve e assina a carta é sempre o <b>titular</b>, com a assinatura igual à do documento.</li>
+          <li>Se houver <b>dependente maior de idade</b> no plano, ele também assina a carta, abaixo do titular, escrevendo <b>“Ciente”</b> e o nome completo dele.</li>
           <li>Fotografe ou digitalize a carta, junto com uma cópia do seu documento com foto, e envie pela plataforma indicada pela empresa.</li>
         </ol>
       </div>
@@ -753,7 +754,8 @@ function drawLetter(){
   const u=(x,ph)=>x?`<u>${esc(x)}</u>`:ph;const d=new Date();
   $('#v_letter').innerHTML=`<p class="r">${u(cid,'(sua cidade)')}, ${d.getDate()} de ${MES_EXT[d.getMonth()]} de ${d.getFullYear()}.</p>
    <p>Eu, ${u(nome,'(seu nome completo)')}, inscrito(a) no CPF sob o nº ${u(cpf,'(seu CPF)')}, portador(a) do RG sob o nº ${u(rg,'(seu RG)')}, solicito a minha exclusão do plano de saúde mantido junto à Unimed Vale Novo Paulista, através do contrato firmado pela empresa CUCINARE PRO ALIMENTACAO LTDA nº 091081000.</p>
-   <div class="sig">(sua assinatura)</div>`;
+   <div class="sig">(assinatura do titular)</div>
+   <div class="sig sig2">Ciente: (assinatura e nome do dependente maior de idade, se houver)</div>`;
 }
 ['#v_nome','#v_cpf','#v_rg','#v_cidade'].forEach(id=>$(id).addEventListener('input',drawLetter));
 $('#vol').addEventListener('contextmenu',e=>{if(e.target.closest('.letter-wrap'))e.preventDefault()});
